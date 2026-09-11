@@ -17,7 +17,7 @@ async function loadModel() {
 
 export async function predictRandomForest(text: string) {
   const model = await loadModel();
-  const terms = wordopt(text).match(/(?u)\b\w\w+\b/g) ?? [];
+  const terms = wordopt(text).match(/\b\w\w+\b/g) ?? [];
   const counts = new Map<number, number>();
   for (const term of terms) { const index = model.vocabulary[term]; if (index !== undefined) counts.set(index, (counts.get(index) ?? 0) + 1); }
   const weights = new Map<number, number>();
