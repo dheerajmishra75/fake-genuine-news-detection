@@ -50,7 +50,7 @@ async function searchNews(query: string) {
   if (!response.ok) return [];
   const xml = await response.text();
   return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, 5).map((match) => {
-    const item = match[1];
+    const item = match[1] ?? "";
     const field = (name: string) => decodeXml(item.match(new RegExp(`<${name}>([\\s\\S]*?)<\\/${name}>`))?.[1] ?? "");
     const sourceMatch = item.match(/<source[^>]*>([\s\S]*?)<\/source>/);
     return { title: field("title"), url: field("link"), publishedAt: field("pubDate"), source: decodeXml(sourceMatch?.[1] ?? "News source") };
@@ -75,7 +75,7 @@ export const analyzeEvidence = createServerFn({ method: "POST" })
       `Assess only whether the listed current-source headlines support or contradict each claim. Do not invent facts. A source is relevant only if it directly addresses a claim. If evidence is weak, indirect, old, or ambiguous, choose insufficient. Return JSON: evidenceStatus supported|contradicted|mixed|insufficient; evidenceConfidence 0..1 based on source agreement/relevance; summary; findings [{claim,assessment}]; relevantSourceIndexes. Never claim certainty.\nCLAIMS:\n${extracted.claims.join("\n")}\nSOURCES:\n${evidence}`,
       resultSchema,
     );
-    const sources = judged.relevantSourceIndexes.filter((i) => deduped[i]).map((i) => deduped[i]).slice(0, 6);
+    const sources = judged.relevantSourceIndexes.map((i) => deduped[i]).filter((source): source is NonNullable<typeof source> => source !== undefined).slice(0, 6);
     if (judged.evidenceStatus === "insufficient" || sources.length === 0) {
       return { verdict: "INSUFFICIENT EVIDENCE" as const, confidence: null, reason: judged.summary, findings: judged.findings, sources, analysisMs: Date.now() - started };
     }

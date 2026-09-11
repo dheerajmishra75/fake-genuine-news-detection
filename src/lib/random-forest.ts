@@ -22,14 +22,20 @@ export async function predictRandomForest(text: string) {
   for (const term of terms) { const index = model.vocabulary[term]; if (index !== undefined) counts.set(index, (counts.get(index) ?? 0) + 1); }
   const weights = new Map<number, number>();
   let norm = 0;
-  for (const [index, count] of counts) { const weight = count * model.idf[index]; weights.set(index, weight); norm += weight * weight; }
+  for (const [index, count] of counts) { const weight = count * (model.idf[index] ?? 0); weights.set(index, weight); norm += weight * weight; }
   norm = Math.sqrt(norm) || 1;
   for (const [index, weight] of weights) weights.set(index, weight / norm);
   let genuineVotes = 0;
   for (const tree of model.trees) {
     let node = 0;
-    while (tree.l[node] !== -1) node = (weights.get(tree.f[node]) ?? 0) <= tree.t[node] ? tree.l[node] : tree.r[node];
-    const values = tree.v[node];
+    while ((tree.l[node] ?? -1) !== -1) {
+      const feature = tree.f[node] ?? -1;
+      const threshold = tree.t[node] ?? 0;
+      const next = (weights.get(feature) ?? 0) <= threshold ? tree.l[node] : tree.r[node];
+      if (next === undefined) break;
+      node = next;
+    }
+    const values = tree.v[node] ?? [0, 0];
     if ((values[1] ?? 0) > (values[0] ?? 0)) genuineVotes += 1;
   }
   return { probability: genuineVotes / model.trees.length, metrics: model.metrics };
