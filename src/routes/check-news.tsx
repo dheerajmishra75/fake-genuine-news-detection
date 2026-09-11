@@ -1,0 +1,4 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { Analyzer } from "@/components/fake-news/analyzer";
+export const Route=createFileRoute("/check-news")({head:()=>({meta:[{title:"Check News — Fake News Detection"},{name:"description",content:"Paste a full news article for evidence-based analysis."},{property:"og:title",content:"Check News — Fake News Detection"},{property:"og:description",content:"Check news against current sources and a trained Random Forest model."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}),component:Page});
+function Page(){return <main className="mx-auto max-w-5xl px-5 py-12 lg:px-8 lg:py-16"><h1 className="font-display text-5xl font-bold">Check News</h1><p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">Paste the complete article for the strongest claim and context analysis.</p><div className="mt-10"><Analyzer compact/></div></main>}

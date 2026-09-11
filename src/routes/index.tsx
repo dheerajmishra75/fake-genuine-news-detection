@@ -1,24 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
-export const Route = createFileRoute("/")({
-  component: Index,
-});
-
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight, SearchCheck, ShieldCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Analyzer } from "@/components/fake-news/analyzer";
+export const Route=createFileRoute("/")({head:()=>({meta:[{title:"Fake News Detection — Check Before You Share"},{name:"description",content:"Check a news article using trained machine learning and current trustworthy sources."},{property:"og:title",content:"Fake News Detection — Check Before You Share"},{property:"og:description",content:"Analyze news with machine learning and current trustworthy sources."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary_large_image"}]}),component:Home});
+function Home(){return <main><section className="border-b border-border"><div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 lg:grid-cols-[1.25fr_.75fr] lg:px-8 lg:py-24"><div><p className="mb-5 text-xs font-bold uppercase text-primary">Independent article checker</p><h1 className="font-display text-5xl font-bold leading-none sm:text-7xl">CHECK BEFORE<br/>YOU SHARE.</h1><p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">Paste any news article. We compare its factual claims with current reporting and use a trained machine-learning model as supporting evidence.</p><Button asChild size="lg" className="mt-8 rounded-none px-7"><Link to="/check-news">CHECK NEWS <ArrowRight/></Link></Button></div><div className="border-l border-border pl-0 lg:pl-8"><div className="grid gap-7"><div><SearchCheck className="mb-3 text-primary"/><h2 className="font-display text-xl font-bold">Current evidence</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Checks important claims against recent coverage from named sources.</p></div><div><ShieldCheck className="mb-3 text-primary"/><h2 className="font-display text-xl font-bold">Honest uncertainty</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Returns insufficient evidence rather than forcing a verdict when sources are weak or mixed.</p></div></div></div></div></section><div className="mx-auto max-w-6xl px-5 py-14 lg:px-8"><Analyzer compact/></div></main>}
