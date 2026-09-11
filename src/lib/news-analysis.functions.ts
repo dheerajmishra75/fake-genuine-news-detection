@@ -89,23 +89,50 @@ export const analyzeEvidence = createServerFn({ method: "POST" })
     );
     const batches = await Promise.all(extracted.queries.map(searchNews));
     const deduped = Array.from(new Map(batches.flat().filter((s) => s.title && s.url).map((s) => [s.title, s])).values()).slice(0, 12);
+
+    // Decide a verdict from whatever evidence exists. The ML signal alone carries the
+    // decision only when current reporting gives us nothing to compare against.
+    const finish = (genuineScore: number, reason: string, findings: Array<{ claim: string; assessment: string }>, sources: Array<{ title: string; url: string; source: string; publishedAt: string }>) => {
+      const genuine = genuineScore >= 0.5;
+      const strength = Math.abs(genuineScore - 0.5) * 2; // 0 = no separation, 1 = fully separated
+      return {
+        verdict: genuine ? ("LIKELY GENUINE NEWS" as const) : ("LIKELY FAKE NEWS" as const),
+        confidence: Math.min(96, Math.max(52, Math.round(50 + strength * 46))),
+        reason,
+        findings,
+        sources,
+        analysisMs: Date.now() - started,
+      };
+    };
+
     if (deduped.length === 0) {
-      return { verdict: "INSUFFICIENT EVIDENCE" as const, confidence: null, reason: "No sufficiently relevant current reporting was found. The model signal alone is not enough for a factual verdict.", findings: extracted.claims.map((claim) => ({ claim, assessment: "No reliable current evidence found." })), sources: [], analysisMs: Date.now() - started };
+      return finish(
+        data.mlProbability,
+        `No current reporting was found for the main claims, so this verdict relies on the trained model's reading of the article (${Math.round(data.mlProbability * 100)}% genuine). Treat it with extra caution.`,
+        extracted.claims.map((claim) => ({ claim, assessment: "No matching current reporting was found for this claim." })),
+        [],
+      );
     }
+
     const evidence = deduped.map((s, i) => `[${i}] ${s.source} — ${s.title} (${s.publishedAt})`).join("\n");
     const judged = await gatewayJson(
-      `Assess only whether the listed current-source headlines support or contradict each claim. Do not invent facts. A source is relevant only if it directly addresses a claim. If evidence is weak, indirect, old, or ambiguous, choose insufficient. Return JSON: evidenceStatus supported|contradicted|mixed|insufficient; evidenceConfidence 0..1 based on source agreement/relevance; summary; findings [{claim,assessment}]; relevantSourceIndexes. Never claim certainty.\nCLAIMS:\n${extracted.claims.join("\n")}\nSOURCES:\n${evidence}`,
+      `Assess whether the listed current-source headlines support or contradict each claim. Do not invent facts. A source is relevant only if it directly addresses a claim. Use "supported" when reputable current reporting matches the claims, "contradicted" when reporting debunks or clearly conflicts with them, "mixed" when sources disagree, and "insufficient" only when no listed source addresses the claims. Return JSON: evidenceStatus supported|contradicted|mixed|insufficient; evidenceConfidence 0..1 based on source agreement and relevance; summary written for ordinary readers; findings [{claim,assessment}]; relevantSourceIndexes. Never claim certainty.\nCLAIMS:\n${extracted.claims.join("\n")}\nSOURCES:\n${evidence}`,
       resultSchema,
     );
     const sources = judged.relevantSourceIndexes.map((i) => deduped[i]).filter((source): source is NonNullable<typeof source> => source !== undefined).slice(0, 6);
-    if (judged.evidenceStatus === "insufficient" || sources.length === 0) {
-      return { verdict: "INSUFFICIENT EVIDENCE" as const, confidence: null, reason: judged.summary, findings: judged.findings, sources, analysisMs: Date.now() - started };
-    }
-    const evidenceGenuine = judged.evidenceStatus === "supported" ? judged.evidenceConfidence : judged.evidenceStatus === "contradicted" ? 1 - judged.evidenceConfidence : 0.5;
-    const combined = evidenceGenuine * 0.8 + data.mlProbability * 0.2;
-    if (judged.evidenceStatus === "mixed" || Math.abs(combined - 0.5) < 0.12) {
-      return { verdict: "INSUFFICIENT EVIDENCE" as const, confidence: null, reason: judged.summary, findings: judged.findings, sources, analysisMs: Date.now() - started };
-    }
-    const genuine = combined > 0.5;
-    return { verdict: genuine ? "LIKELY GENUINE NEWS" as const : "LIKELY FAKE NEWS" as const, confidence: Math.min(95, Math.max(55, Math.round((genuine ? combined : 1 - combined) * 100))), reason: judged.summary, findings: judged.findings, sources, analysisMs: Date.now() - started };
+
+    // Evidence signal in "probability genuine" space, centred on 0.5.
+    const conf = judged.evidenceConfidence;
+    const noUsableEvidence = judged.evidenceStatus === "insufficient" || sources.length === 0;
+    const evidenceGenuine =
+      judged.evidenceStatus === "supported" ? 0.5 + 0.5 * conf
+      : judged.evidenceStatus === "contradicted" ? 0.5 - 0.5 * conf
+      : 0.5; // mixed / insufficient
+
+    const evidenceWeight = noUsableEvidence ? 0.15 : judged.evidenceStatus === "mixed" ? 0.5 : 0.8;
+    const combined = evidenceGenuine * evidenceWeight + data.mlProbability * (1 - evidenceWeight);
+    const reason = noUsableEvidence
+      ? `${judged.summary} Current reporting was inconclusive, so the trained model's reading of the article (${Math.round(data.mlProbability * 100)}% genuine) decided this verdict.`
+      : judged.summary;
+    return finish(combined, reason, judged.findings, sources);
   });

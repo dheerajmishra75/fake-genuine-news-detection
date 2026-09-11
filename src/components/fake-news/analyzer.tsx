@@ -6,8 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { analyzeEvidence } from "@/lib/news-analysis.functions";
 import { predictRandomForest } from "@/lib/random-forest";
 
-type Verdict = "LIKELY GENUINE NEWS" | "LIKELY FAKE NEWS" | "INSUFFICIENT EVIDENCE";
-type Analysis = { verdict: Verdict; confidence: number | null; reason: string; findings: Array<{claim:string;assessment:string}>; sources: Array<{title:string;url:string;source:string;publishedAt:string}>; analysisMs:number; mlProbability:number; preview:string };
+type Verdict = "LIKELY GENUINE NEWS" | "LIKELY FAKE NEWS";
+type Analysis = { verdict: Verdict; confidence: number; reason: string; findings: Array<{claim:string;assessment:string}>; sources: Array<{title:string;url:string;source:string;publishedAt:string}>; analysisMs:number; mlProbability:number; preview:string };
 type HistoryItem = Pick<Analysis,"verdict"|"confidence"|"preview"> & { timestamp:string };
 const key = "fake-news-detection-history-v1";
 
