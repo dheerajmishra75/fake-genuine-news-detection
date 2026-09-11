@@ -7,7 +7,7 @@ export function wordopt(text: string) {
 }
 
 async function loadModel() {
-  if (!modelPromise) modelPromise = fetch("/models/random-forest-v1.json.gz").then(async (response) => {
+  if (!modelPromise) modelPromise = fetch("/models/random-forest-v1.bin").then(async (response) => {
     if (!response.ok || !response.body) throw new Error("The ML model could not be loaded.");
     const stream = response.body.pipeThrough(new DecompressionStream("gzip"));
     return JSON.parse(await new Response(stream).text()) as Model;
