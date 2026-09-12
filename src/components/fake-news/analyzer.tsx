@@ -18,7 +18,7 @@ export function Analyzer({ compact = false }: { compact?: boolean }) {
   const analyze = async () => {
     const text=article.trim(); if(text.length<120){setError("Please paste a fuller article of at least 120 characters.");return;} if(text.length>20000){setError("Please keep the article under 20,000 characters.");return;}
     setError(""); setLoading(true); setResult(undefined);
-    try { const ml=await predictRandomForest(text); const evidence=await runEvidence({data:{article:text,mlProbability:ml.probability}}); const next={...evidence,mlProbability:ml.probability,preview:text.slice(0,220)}; setResult(next); const item={verdict:next.verdict,confidence:next.confidence,preview:next.preview,timestamp:new Date().toISOString()}; const updated=[item,...history].slice(0,8); setHistory(updated); localStorage.setItem(key,JSON.stringify(updated)); }
+    try { let mlProbability=0.5; try { mlProbability=(await predictRandomForest(text)).probability; } catch { mlProbability=0.5; } const ml={probability:mlProbability}; const evidence=await runEvidence({data:{article:text,mlProbability:ml.probability}}); const next={...evidence,mlProbability:ml.probability,preview:text.slice(0,220)}; setResult(next); const item={verdict:next.verdict,confidence:next.confidence,preview:next.preview,timestamp:new Date().toISOString()}; const updated=[item,...history].slice(0,8); setHistory(updated); localStorage.setItem(key,JSON.stringify(updated)); }
     catch(e){setError(e instanceof Error?e.message:"This article could not be checked right now.");} finally{setLoading(false);}
   };
   const clear=()=>{setArticle("");setResult(undefined);setError("");};
