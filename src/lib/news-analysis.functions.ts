@@ -144,8 +144,11 @@ export const analyzeEvidence = createServerFn({ method: "POST" })
       : judged.evidenceStatus === "contradicted" ? 0.5 - 0.5 * conf
       : 0.5; // mixed / insufficient
 
-    const evidenceWeight = noUsableEvidence ? 0.15 : judged.evidenceStatus === "mixed" ? 0.5 : 0.8;
-    const combined = evidenceGenuine * evidenceWeight + data.mlProbability * (1 - evidenceWeight);
+    const evidenceWeight = noUsableEvidence ? 0.15 : judged.evidenceStatus === "mixed" ? 0.5 : 0.85;
+    const blended = evidenceGenuine * evidenceWeight + data.mlProbability * (1 - evidenceWeight);
+    // When both signals point the same way, the verdict deserves stronger confidence.
+    const aligned = (evidenceGenuine - 0.5) * (data.mlProbability - 0.5) > 0;
+    const combined = Math.min(1, Math.max(0, aligned ? 0.5 + (blended - 0.5) * 1.35 : blended));
     const reason = noUsableEvidence
       ? `${judged.summary} Current reporting was inconclusive, so the trained model's reading of the article (${Math.round(data.mlProbability * 100)}% genuine) decided this verdict.`
       : judged.summary;
