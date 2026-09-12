@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { resolveSubjectProfile } from "@/lib/subject-profile";
 
 const inputSchema = z.object({
   article: z.string().trim().min(120, "Please paste at least 120 characters.").max(20000, "Please keep the article under 20,000 characters."),
