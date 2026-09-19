@@ -114,9 +114,19 @@ function decodeXml(value: string) {
 
 async function searchNews(query: string) {
   const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en&gl=US&ceid=US:en`;
-  const response = await fetch(url, { headers: { "User-Agent": "FakeNewsDetection/1.0" } });
-  if (!response.ok) return [];
+  let response: Response;
+  try {
+    response = await fetch(url, { headers: { "User-Agent": "FakeNewsDetection/1.0" }, signal: AbortSignal.timeout(15000) });
+  } catch (error) {
+    console.error("[evidence] news search failed", error);
+    return [];
+  }
+  if (!response.ok) {
+    console.error(`[evidence] news search responded ${response.status}`);
+    return [];
+  }
   const xml = await response.text();
+
   return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, 5).map((match) => {
     const item = match[1] ?? "";
     const field = (name: string) => decodeXml(item.match(new RegExp(`<${name}>([\\s\\S]*?)<\\/${name}>`))?.[1] ?? "");
