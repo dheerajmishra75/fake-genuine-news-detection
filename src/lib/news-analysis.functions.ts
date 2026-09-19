@@ -30,24 +30,68 @@ function normalize(value: unknown): unknown {
   return value;
 }
 
-async function callGateway(prompt: string): Promise<unknown> {
-  const apiKey = process.env['LOVABLE_API_KEY']!;
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-3.1-flash-lite",
-      temperature: 0.1,
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-    }),
-  });
-  if (!response.ok) throw new Error("The evidence service is temporarily unavailable.");
+class GatewayError extends Error {
+  constructor(message: string, readonly status?: number) { super(message); }
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function gatewayRequest(prompt: string): Promise<unknown> {
+  // Env is injected per request on the edge runtime, so read it here, not at module scope.
+  const apiKey = process.env['LOVABLE_API_KEY'];
+  if (!apiKey) {
+    console.error("[evidence] LOVABLE_API_KEY is not configured in this environment.");
+    throw new GatewayError("The evidence service is not configured.");
+  }
+  let response: Response;
+  try {
+    response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(25000),
+      body: JSON.stringify({
+        model: "google/gemini-3.1-flash-lite",
+        temperature: 0.1,
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" },
+      }),
+    });
+  } catch (error) {
+    console.error("[evidence] gateway request failed", error);
+    throw new GatewayError("The evidence service could not be reached.");
+  }
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    console.error(`[evidence] gateway responded ${response.status}: ${body.slice(0, 400)}`);
+    throw new GatewayError(
+      response.status === 429 ? "The evidence service is rate limited right now."
+      : response.status === 402 ? "The evidence service has no remaining credits."
+      : "The evidence service is temporarily unavailable.",
+      response.status,
+    );
+  }
   const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
   const content = payload.choices?.[0]?.message?.content;
-  if (!content) throw new Error("No evidence response was returned.");
+  if (!content) throw new GatewayError("No evidence response was returned.");
   const cleaned = content.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
-  return normalize(JSON.parse(cleaned));
+  try {
+    return normalize(JSON.parse(cleaned));
+  } catch {
+    throw new GatewayError("The evidence service returned an unexpected response.");
+  }
+}
+
+// Transient upstream failures (rate limits, 5xx, timeouts) get one retry with backoff.
+async function callGateway(prompt: string): Promise<unknown> {
+  try {
+    return await gatewayRequest(prompt);
+  } catch (error) {
+    const status = error instanceof GatewayError ? error.status : undefined;
+    const transient = status === undefined || status === 429 || status >= 500;
+    if (!transient) throw error;
+    await sleep(1200);
+    return gatewayRequest(prompt);
+  }
 }
 
 async function gatewayJson<T>(prompt: string, schema: z.ZodSchema<T>): Promise<T> {
@@ -57,8 +101,9 @@ async function gatewayJson<T>(prompt: string, schema: z.ZodSchema<T>): Promise<T
     await callGateway(`${prompt}\n\nIMPORTANT: reply with a single JSON object (not an array, no extra wrapper keys, no markdown).`),
   );
   if (retry.success) return retry.data;
-  throw new Error("The evidence service returned an unexpected response.");
+  throw new GatewayError("The evidence service returned an unexpected response.");
 }
+
 
 
 function decodeXml(value: string) {
