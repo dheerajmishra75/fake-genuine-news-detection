@@ -1,340 +1,165 @@
-# Truth Seeker News
+# Fake News Detection
 
-FAKE NEWS DETECTION — COMPLETE ONE-SHOT BUILD
+A full-stack Machine Learning and Natural Language Processing application that analyzes news articles and classifies them as **Fake** or **Genuine** using TF-IDF and multiple supervised machine learning models.
 
-Build the complete website from scratch in this single task.
+> NLP-based fake news classification with an interactive web application and evidence/verification support.
 
-I have attached my original `Fake News Detection.ipynb`. Use it as the source of truth for my original ML training, preprocessing, TF-IDF and Random Forest methodology.
+### 🚀 Live Demo
 
-IMPORTANT:
+**[Open Fake News Detection](https://fake-genuine-news-detection.vercel.app/)**
 
-Do NOT ask me to upload the large Fake/True CSV files.
+## 📸 Application Preview
 
-Those files are only for training and must never be required by normal users.
+### Home
 
-==================================================
+![Fake News Detection Home](screenshots/home.png)
 
-CORE PURPOSE
+### Check News
 
-==================================================
+![Fake News Detection Check News](screenshots/check-news.png)
 
-The website name MUST be:
+### How It Works
 
-FAKE NEWS DETECTION
+![Fake News Detection How It Works](screenshots/how-it-works.png)
 
-The purpose is simple:
+### About
 
-ANY USER can paste ANY NEW NEWS ARTICLE from anywhere in the world and check whether it is likely genuine or fake.
+![Fake News Detection About](screenshots/about.png)
 
-User flow:
+## Stack
 
-Paste any news article
+| Layer | Technology |
+| --- | --- |
+| Machine Learning | Python, Scikit-learn |
+| NLP | TF-IDF, Text Preprocessing |
+| Models | Logistic Regression, Decision Tree, Random Forest, Gradient Boosting |
+| UI | React, Vite, JavaScript |
+| Styling | CSS |
+| Backend / Services | Supabase, Evidence / Verification Services |
+| Deployment | Vercel |
 
-→ Check News
+## Machine Learning Pipeline
 
-→ analyze the article
+The project follows a traditional supervised NLP classification workflow:
 
-→ verify its claims using current trustworthy web sources
+```text
+News Dataset
+     ↓
+Text Cleaning & Preprocessing
+     ↓
+TF-IDF Vectorization
+     ↓
+Feature Representation
+     ↓
+Machine Learning Models
+     ↓
+Model Evaluation
+     ↓
+Fake / Genuine Classification
+Text Preprocessing
 
-→ use my original ML model as supporting evidence
+News articles are cleaned and prepared before being converted into numerical features for machine learning.
 
-→ show:
+TF-IDF
 
-LIKELY GENUINE NEWS
+Term Frequency-Inverse Document Frequency (TF-IDF) is used to transform processed news text into numerical feature vectors.
 
-OR
+Classification
 
-LIKELY FAKE NEWS
+The extracted TF-IDF features are evaluated using multiple supervised machine learning algorithms to classify news into the learned Fake or Genuine categories.
 
-with an honest, evidence-based confidence.
+Models & Performance
 
-==================================================
+The project evaluates four supervised learning algorithms:
 
-ML
+Logistic Regression
+Decision Tree
+Random Forest
+Gradient Boosting
 
-==================================================
+The evaluated results include:
 
-Use `Fake News Detection.ipynb` for:
+Model	Accuracy
+Logistic Regression	98.57%
+Random Forest	98.90%
 
-- original `wordopt()` preprocessing
-
-- original TF-IDF approach
-
-- original dataset methodology
-
-- Logistic Regression
-
-- Decision Tree
-
-- Random Forest
-
-- Gradient Boosting
-
-- original evaluation
-
-Use Random Forest as the primary ML classifier.
-
-Preserve:
-
-0 = Fake News
-
-1 = Genuine/True News
-
-Save and reuse the fitted TF-IDF vectorizer and trained Random Forest.
-
-Never fit TF-IDF on a user's article.
-
-Do NOT use mock predictions, random predictions, hard-coded results, synthetic data, keyword-only classification, or LLM-only prediction.
-
-==================================================
-
-NEW/CURRENT NEWS
-
-==================================================
-
-Users will submit NEW and CURRENT news that may never exist in the training dataset.
-
-Therefore, do NOT depend on the CSV/training dataset for checking user articles.
-
-For every new article:
-
-ARTICLE
-
-→ ML analysis
-
-→ extract important factual claims
-
-→ verify using current trustworthy sources
-
-→ compare evidence
-
-→ final verdict
-
-Use reputable news organizations, official government/organization sources and reliable fact-checking sources where available.
-
-If reliable sources support the claims:
-
-→ LIKELY GENUINE NEWS
-
-If reliable sources contradict/debunk the claims:
-
-→ LIKELY FAKE NEWS
-
-If there is not enough reliable evidence:
-
-→ INSUFFICIENT EVIDENCE
-
-Never invent sources, evidence or confidence.
-
-==================================================
-
-CONFIDENCE
-
-==================================================
-
-Show meaningful confidence based on actual evidence.
-
-Do NOT show arbitrary 45%/50% confidence.
-
-Do NOT automatically show 90–100%.
-
-Strong evidence → higher confidence.
-
-Mixed evidence → lower confidence.
-
-Insufficient evidence → show "INSUFFICIENT EVIDENCE".
-
-Never claim 100% certainty.
-
-==================================================
-
-RESULT
-
-==================================================
-
-Show:
-
-Verdict
-
-Confidence
-
-Why this result was reached
-
-ML model signal
-
-Supporting/contradicting sources
-
-Article preview
-
-Analysis time
-
-Keep the explanation simple and understandable for normal users.
-
-==================================================
-
-DESIGN
-
-==================================================
-
-Use a clean, normal professional newspaper/editorial-style website.
-
-It should look human-designed, trustworthy and suitable for daily public use — NOT AI-generated.
-
-Use:
-
-- white/light neutral background
-
-- dark professional text
-
-- simple navy/dark-blue accent
-
-- subtle grey borders
-
-- clean typography
-
-- restrained colours
-
-- professional buttons
-
-- minimal animation
-
-Avoid:
-
-- neon colours
-
-- glowing effects
-
-- futuristic AI graphics
-
-- excessive gradients
-
-- heavy glassmorphism
-
-- cartoon AI graphics
-
-Keep the design simple and credible.
-
-==================================================
-
-PAGES
-
-==================================================
-
-Create:
-
-Home
-
-Check News
+These accuracy values represent performance on the evaluated dataset used during model development.
 
 How It Works
+A user enters or pastes a news article.
+The application validates the submitted text.
+The news content is processed using the NLP preprocessing pipeline.
+TF-IDF converts the processed text into numerical features.
+The machine learning classifier analyzes the resulting features.
+The application displays the Fake/Genuine classification.
+Evidence and verification information is provided where available.
+User News Article
+       ↓
+Input Validation
+       ↓
+NLP Preprocessing
+       ↓
+TF-IDF Transformation
+       ↓
+ML Classification
+       ↓
+Fake / Genuine Result
+       ↓
+Evidence / Verification
+Dataset
 
-About
+The machine learning workflow uses labeled news data containing Fake and Genuine news examples.
 
-Homepage headline:
+The dataset is used for:
 
-CHECK BEFORE YOU SHARE.
+Data exploration
+Text preprocessing
+Feature extraction
+Model training
+Model evaluation
 
-Primary button:
+User-submitted articles are processed through the learned classification pipeline rather than being treated as simple dataset lookups.
 
-CHECK NEWS
+Application Pages
+Home — Introduction to the application and its purpose.
+Check News — Submit a news article and analyze it.
+How It Works — Explains the machine learning and analysis workflow.
+About — Project and application information.
+Limitations
+The model provides a machine-learning classification, not absolute proof that a real-world claim is true or false.
+Model performance depends on the quality and distribution of the training data.
+News topics, writing styles, and misinformation techniques can change over time.
+Evidence and verification features may depend on external services and available sources.
+Dataset accuracy does not guarantee identical performance on every future news article.
+Future Improvements
+Real-time source verification
+Automated claim extraction
+External fact-checking API integration
+Source credibility analysis
+Explainable AI predictions
+Multilingual news classification
+Transformer-based NLP models
+Continuous model evaluation
+Improved detection of emerging misinformation patterns
 
-The Analyzer must be the main feature.
-
-==================================================
-
-ANALYZER
-
-==================================================
-
-Large input:
-
-"Paste the full news article here..."
-
-Button:
-
-CHECK NEWS
-
-Include:
-
-- character count
-
-- clear button
-
-- loading state
-
-- validation
-
-- mobile support
-
-Loading text:
-
-"Checking this article..."
-
-Do not show technical/developer information.
-
-==================================================
-
-HISTORY
-
-==================================================
-
-Add Recent Analyses using localStorage.
-
-Store:
-
-- article preview
-
-- verdict
-
-- confidence
-
-- timestamp
-
-Allow Clear History.
-
-No login required.
-
-==================================================
-
-IMPORTANT
-
-==================================================
-
-The large Fake/True CSV files must NEVER be required by normal users.
-
-My notebook/data is only for training the ML component.
-
-The website must work with NEW user-provided news articles.
-
-Do not use fake/mock functionality.
-
-Do not ask me for additional files.
-
-Do not ask me what to do next.
-
-Do not give me a TODO list.
-
-Build, connect, test and finish the complete `Fake News Detection` website in this single task.
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://fake-genuine-news-detection.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/1859e691-e76c-46a5-9a2a-7f347506ff45).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+Local Development
+git clone https://github.com/dheerajmishra75/fake-genuine-news-detection.git
+cd fake-genuine-news-detection
+npm install
 npm run dev
-```
+
+Environment-specific configuration should be provided through environment variables.
+
+Author
+
+Dheeraj Mishra
+
+B.Tech Computer Science & Engineering
+
+Interested in Data Science, Machine Learning, Artificial Intelligence, Natural Language Processing, and Backend Development.
+
+GitHub: https://github.com/dheerajmishra75
+Live Demo: https://fake-genuine-news-detection.vercel.app/
+Disclaimer
+
+This application provides machine-learning-based predictions and should not be considered an authoritative fact-checking system. Important claims should be independently verified using reliable primary sources, established news organizations, and independent fact-checking resources.
